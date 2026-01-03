@@ -1,0 +1,64 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: research-assistant-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - VECTOR_STORE_TYPE=chroma
+      - CHROMA_PERSIST_DIRECTORY=./data/vector_store
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      - EMBEDDING_DEVICE=cpu
+      - CHUNK_SIZE=1000
+      - CHUNK_OVERLAP=200
+      - MAX_DOCUMENTS_PER_QUERY=5
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DEBUG=false
+      - ALLOWED_ORIGINS=["http://localhost:3000", "http://127.0.0.1:3000"]
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - research-assistant-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: research-assistant-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - research-assistant-network
+
+networks:
+  research-assistant-network:
+    driver: bridge
+
+volumes:
+  research-assistant-data:
+    driver: local
