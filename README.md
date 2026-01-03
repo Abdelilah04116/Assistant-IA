@@ -490,4 +490,4 @@ rm -rf ./data/vector_store/*
 
 ---
 
-**Built with ❤️ using modern AI and web technologies**
+**Built with ❤️ par Abdelilah Ourti**
