@@ -2,7 +2,7 @@
 
 A production-ready, multi-agent RAG-powered research assistant that answers complex questions by retrieving and synthesizing information from reliable sources.
 
-## 🏗️ Architecture Overview
+##  Architecture Overview
 
 This system combines **Retrieval-Augmented Generation (RAG)** with a **multi-agent architecture** to provide intelligent, well-researched answers with proper citations.
 
@@ -31,7 +31,7 @@ This system combines **Retrieval-Augmented Generation (RAG)** with a **multi-age
    - Search and collection statistics
    - Responsive design with TailwindCSS
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -99,7 +99,7 @@ This system combines **Retrieval-Augmented Generation (RAG)** with a **multi-age
    npm start
    ```
 
-## 📖 Usage Guide
+##  Usage Guide
 
 ### 1. Document Upload
 
@@ -126,7 +126,7 @@ Search through uploaded documents:
 - Optional reranking for better results
 - Filter by document type or metadata
 
-## 🔧 Configuration
+##  Configuration
 
 ### Environment Variables
 
@@ -175,7 +175,7 @@ REACT_APP_API_URL=http://localhost:8000
 - Requires manual metadata management
 - Best for large-scale deployments
 
-## 🏛️ API Documentation
+##  API Documentation
 
 ### Core Endpoints
 
@@ -221,7 +221,7 @@ GET /health/
 ### Full API Documentation
 Visit http://localhost:8000/docs for interactive API documentation.
 
-## 🧠 Multi-Agent Workflow
+##  Multi-Agent Workflow
 
 ### 1. Research Agent
 - **Purpose**: Information retrieval and source gathering
@@ -257,7 +257,7 @@ The system uses **LangGraph** for agent orchestration because:
 - **LangChain Integration**: Seamless integration with the LangChain ecosystem
 - **Scalability**: Designed for complex, multi-step reasoning workflows
 
-## 🔄 RAG Pipeline Details
+##  RAG Pipeline Details
 
 ### Document Processing
 
@@ -281,7 +281,7 @@ The system uses **LangGraph** for agent orchestration because:
 - **Source Validation**: Verify document integrity
 - **Performance Monitoring**: Track retrieval metrics
 
-## 📊 Performance & Scaling
+##  Performance & Scaling
 
 ### Optimization Features
 
@@ -311,7 +311,7 @@ The system uses **LangGraph** for agent orchestration because:
 - **Storage**: 100GB+ SSD
 - **Network**: High-speed internet
 
-## 🔒 Security Considerations
+##  Security Considerations
 
 ### API Security
 - **CORS Configuration**: Restricted origins
@@ -325,7 +325,7 @@ The system uses **LangGraph** for agent orchestration because:
 - **Temporary Files**: Automatic cleanup
 - **Access Control**: User-based document access (extend as needed)
 
-## 🧪 Testing
+##  Testing
 
 ### Backend Tests
 ```bash
@@ -344,7 +344,7 @@ npm test
 docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 ```
 
-## 📈 Monitoring & Logging
+##  Monitoring & Logging
 
 ### Application Logs
 - **Structured Logging**: JSON format with correlation IDs
@@ -358,7 +358,7 @@ docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 - **Resource Usage**: CPU, memory, and storage monitoring
 - **Alerting**: Health-based alerting (implement as needed)
 
-## 🚀 Deployment
+##  Deployment
 
 ### Production Deployment
 
@@ -387,7 +387,7 @@ docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 - **Azure**: AKS with Azure Database and Redis Cache
 - **Vercel/Railway**: Managed platform deployment
 
-## 🤝 Contributing
+##  Contributing
 
 1. **Fork** the repository
 2. **Create** a feature branch
@@ -402,11 +402,11 @@ docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 - **Documentation**: Update docs for API changes
 - **Performance**: Profile changes that affect performance
 
-## 📝 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Troubleshooting
+##  Troubleshooting
 
 ### Common Issues
 
@@ -475,7 +475,7 @@ rm -rf ./data/vector_store/*
 - [ ] **Smart Caching**: Intelligent result caching
 - [ ] **Database Optimization**: Query performance improvements
 
-## 📚 Additional Resources
+##  Additional Resources
 
 ### Documentation
 - [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)

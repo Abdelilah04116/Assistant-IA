@@ -68,11 +68,15 @@ app.add_middleware(
 async def global_exception_handler(request, exc):
     """Handle uncaught exceptions globally."""
     logger.error(f"Unhandled exception: {str(exc)}")
+    
+    # In production, mask the internal error detail
+    detail_message = str(exc) if settings.debug else "Internal Server Error"
+    
     return JSONResponse(
         status_code=500,
         content=ErrorResponse(
             error="Internal server error",
-            detail=str(exc),
+            detail=detail_message,
             timestamp="2024-01-01T00:00:00Z"  # Would use actual timestamp
         ).dict()
     )
