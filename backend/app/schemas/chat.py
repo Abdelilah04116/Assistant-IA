@@ -3,7 +3,9 @@ Pydantic schemas for chat and query processing.
 """
 
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+from typing import List, Dict, Any, Optional
+from pydantic import BaseModel, Field, field_validator
+import bleach
 
 
 class ChatRequest(BaseModel):
@@ -13,6 +15,11 @@ class ChatRequest(BaseModel):
     max_documents: Optional[int] = Field(5, description="Maximum documents to retrieve")
     include_web_search: Optional[bool] = Field(True, description="Include web search in research")
     style_preferences: Optional[Dict[str, Any]] = Field(None, description="Writing style preferences")
+
+    @field_validator('query')
+    def sanitize_query(cls, v):
+        """Sanitize query to remove potentially dangerous HTML."""
+        return bleach.clean(v, strip=True)
 
 
 class Citation(BaseModel):

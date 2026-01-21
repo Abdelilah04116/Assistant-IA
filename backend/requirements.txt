@@ -19,3 +19,5 @@ tiktoken==0.5.2
 numpy==1.24.3
 pandas==2.0.3
 tzdata==2023.3
+slowapi==0.1.9
+bleach==6.1.0

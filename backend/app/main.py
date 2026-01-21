@@ -12,6 +12,18 @@ from .core import setup_logging, get_logger, settings
 from .api import chat_router, ingestion_router, health_router
 from .schemas import ErrorResponse
 
+# Security & Rate Limiting
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.errors import RateLimitExceeded
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+
+from .core.security import limiter
+
+# Setup logging
+setup_logging()
+logger = get_logger(__name__)
+
 # Setup logging
 setup_logging()
 logger = get_logger(__name__)
@@ -51,6 +63,17 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
+)
+
+# Set limiter on app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Security Middleware
+app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(
+    TrustedHostMiddleware, 
+    allowed_hosts=settings.allowed_origins + ["localhost", "127.0.0.1"]
 )
 
 # Configure CORS

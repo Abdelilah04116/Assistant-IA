@@ -6,8 +6,10 @@ Handles user queries and orchestrates the multi-agent workflow.
 import time
 import uuid
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, Request
 from fastapi.responses import StreamingResponse
+
+from ..core.security import limiter
 
 from ..agents import AgentOrchestrator
 from ..core import get_logger
@@ -23,7 +25,8 @@ orchestrator = AgentOrchestrator()
 
 
 @router.post("/", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
+@limiter.limit("20/minute")
+async def chat(request: Request, chat_request: ChatRequest) -> ChatResponse:
     """
     Process a user query through the multi-agent workflow.
     
@@ -34,14 +37,14 @@ async def chat(request: ChatRequest) -> ChatResponse:
         Chat response with answer and citations
     """
     try:
-        logger.info(f"Received chat request: {request.query[:100]}...")
+        logger.info(f"Received chat request: {chat_request.query[:100]}...")
         
         # Generate workflow ID
-        workflow_id = request.session_id or str(uuid.uuid4())
+        workflow_id = chat_request.session_id or str(uuid.uuid4())
         
         # Process query through orchestrator
         result = await orchestrator.process_query(
-            query=request.query,
+            query=chat_request.query,
             workflow_id=workflow_id
         )
         
@@ -77,7 +80,8 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
 
 @router.get("/status/{workflow_id}")
-async def get_workflow_status(workflow_id: str) -> Dict[str, Any]:
+@limiter.limit("60/minute")
+async def get_workflow_status(request: Request, workflow_id: str) -> Dict[str, Any]:
     """
     Get the status of a workflow execution.
     
@@ -100,7 +104,8 @@ async def get_workflow_status(workflow_id: str) -> Dict[str, Any]:
 
 
 @router.post("/stream")
-async def chat_stream(request: ChatRequest):
+@limiter.limit("20/minute")
+async def chat_stream(request: Request, chat_request: ChatRequest):
     """
     Stream chat response for real-time interaction.
     Note: This is a simplified streaming implementation.
@@ -121,7 +126,7 @@ async def chat_stream(request: ChatRequest):
             
             # Process the query
             result = await orchestrator.process_query(
-                query=request.query,
+                query=chat_request.query,
                 workflow_id=workflow_id
             )
             

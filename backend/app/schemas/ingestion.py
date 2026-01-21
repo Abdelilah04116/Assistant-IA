@@ -3,7 +3,9 @@ Pydantic schemas for document ingestion.
 """
 
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+from typing import List, Dict, Any, Optional
+from pydantic import BaseModel, Field, field_validator
+import bleach
 
 
 class DocumentIngestRequest(BaseModel):
@@ -12,7 +14,12 @@ class DocumentIngestRequest(BaseModel):
     file_type: str = Field(..., description="Type of file (pdf, txt, md)")
     chunk_size: Optional[int] = Field(1000, description="Text chunk size")
     chunk_overlap: Optional[int] = Field(200, description="Overlap between chunks")
+    chunk_overlap: Optional[int] = Field(200, description="Overlap between chunks")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional document metadata")
+
+    @field_validator('filename')
+    def sanitize_filename(cls, v):
+        return bleach.clean(v, strip=True)
 
 
 class DocumentChunk(BaseModel):
@@ -66,7 +73,12 @@ class SearchRequest(BaseModel):
     """Request schema for document search."""
     query: str = Field(..., description="Search query")
     k: Optional[int] = Field(5, description="Number of results to return")
+    k: Optional[int] = Field(5, description="Number of results to return")
     rerank: Optional[bool] = Field(False, description="Whether to apply reranking")
+
+    @field_validator('query')
+    def sanitize_query(cls, v):
+        return bleach.clean(v, strip=True)
 
 
 class SearchResult(BaseModel):

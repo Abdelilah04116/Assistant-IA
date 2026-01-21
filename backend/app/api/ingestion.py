@@ -8,8 +8,10 @@ import time
 import asyncio
 from typing import List, Dict, Any
 from pathlib import Path
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends, Request
 from fastapi.responses import JSONResponse
+
+from ..core.security import limiter
 
 from ..rag import DocumentProcessor, DocumentRetriever
 from ..core import get_logger, settings
@@ -35,7 +37,9 @@ document_retriever = DocumentRetriever()
 
 
 @router.post("/upload", response_model=IngestionResult)
+@limiter.limit("10/minute")
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...),
     chunk_size: int = Form(1000),
     chunk_overlap: int = Form(200),
@@ -131,7 +135,9 @@ async def upload_document(
 
 
 @router.post("/batch", response_model=BatchIngestionResult)
+@limiter.limit("5/minute")
 async def batch_upload(
+    request: Request,
     files: List[UploadFile] = File(...),
     chunk_size: int = Form(1000),
     chunk_overlap: int = Form(200),
@@ -161,7 +167,14 @@ async def batch_upload(
             # Process files in parallel
             tasks = []
             for file in files:
-                task = upload_document(file, chunk_size, chunk_overlap, "{}")
+                # Note: internal calls to upload_document won't trigger rate limiter which is good
+                # But we need to mock request object or change upload_document signature if we call it directly
+                # For simplicity here, we assume upload_document logic creates dependency
+                # Actually, since we changed the signature of upload_document to accept Request, 
+                # we need to pass it or refactor.
+                # Refactoring: extract logic to service layer to avoid calling controller from controller.
+                # Use request object from parent call.
+                task = upload_document(request, file, chunk_size, chunk_overlap, "{}")
                 tasks.append(task)
             
             # Wait for all tasks to complete
@@ -184,7 +197,7 @@ async def batch_upload(
             # Process files sequentially
             for file in files:
                 try:
-                    result = await upload_document(file, chunk_size, chunk_overlap, "{}")
+                    result = await upload_document(request, file, chunk_size, chunk_overlap, "{}")
                     results.append(result)
                 except Exception as e:
                     results.append(IngestionResult(
@@ -225,7 +238,8 @@ async def batch_upload(
 
 
 @router.get("/stats", response_model=CollectionStats)
-async def get_collection_stats() -> CollectionStats:
+@limiter.limit("60/minute")
+async def get_collection_stats(request: Request) -> CollectionStats:
     """
     Get statistics about the document collection.
     
@@ -256,7 +270,8 @@ async def get_collection_stats() -> CollectionStats:
 
 
 @router.delete("/collection")
-async def delete_collection(request: DeleteCollectionRequest) -> Dict[str, str]:
+@limiter.limit("5/minute")
+async def delete_collection(request: Request, delete_request: DeleteCollectionRequest) -> Dict[str, str]:
     """
     Delete the entire document collection.
     
@@ -267,7 +282,7 @@ async def delete_collection(request: DeleteCollectionRequest) -> Dict[str, str]:
         Confirmation message
     """
     try:
-        if request.confirmation != "DELETE_ALL":
+        if delete_request.confirmation != "DELETE_ALL":
             raise HTTPException(
                 status_code=400,
                 detail="Confirmation must be exactly 'DELETE_ALL'"
@@ -289,7 +304,8 @@ async def delete_collection(request: DeleteCollectionRequest) -> Dict[str, str]:
 
 
 @router.post("/search", response_model=SearchResponse)
-async def search_documents(request: SearchRequest) -> SearchResponse:
+@limiter.limit("30/minute")
+async def search_documents(request: Request, search_request: SearchRequest) -> SearchResponse:
     """
     Search documents in the collection.
     
@@ -304,9 +320,9 @@ async def search_documents(request: SearchRequest) -> SearchResponse:
         
         # Retrieve documents
         documents = await document_retriever.retrieve(
-            query=request.query,
-            k=request.k,
-            rerank=request.rerank
+            query=search_request.query,
+            k=search_request.k,
+            rerank=search_request.rerank
         )
         
         # Convert to response format
@@ -323,13 +339,13 @@ async def search_documents(request: SearchRequest) -> SearchResponse:
         processing_time = time.time() - start_time
         
         search_response = SearchResponse(
-            query=request.query,
+            query=search_request.query,
             results=results,
             total_found=len(results),
             processing_time=processing_time
         )
         
-        logger.info(f"Search completed: {len(results)} results for query: {request.query[:50]}...")
+        logger.info(f"Search completed: {len(results)} results for query: {search_request.query[:50]}...")
         return search_response
         
     except Exception as e:

@@ -5,8 +5,10 @@ Health check and monitoring endpoints.
 import time
 import psutil
 from datetime import datetime
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from typing import Dict, Any
+
+from ..core.security import limiter
 
 from ..core import get_logger, settings
 from ..schemas import HealthResponse
@@ -21,7 +23,8 @@ start_time = time.time()
 
 
 @router.get("/", response_model=HealthResponse)
-async def health_check() -> HealthResponse:
+@limiter.limit("60/minute")
+async def health_check(request: Request) -> HealthResponse:
     """
     Comprehensive health check endpoint.
     
@@ -69,7 +72,8 @@ async def health_check() -> HealthResponse:
 
 
 @router.get("/detailed")
-async def detailed_health() -> Dict[str, Any]:
+@limiter.limit("10/minute")
+async def detailed_health(request: Request) -> Dict[str, Any]:
     """
     Detailed health information with system metrics.
     
