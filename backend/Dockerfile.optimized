@@ -1,0 +1,66 @@
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file content
+COPY requirements.txt ./requirements.txt
+
+# Set pip settings to avoid timeouts and improve reliability
+ENV PIP_DEFAULT_TIMEOUT=1000 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONUNBUFFERED=1
+
+# Install dependencies in stages to handle large packages better
+# Stage 1: Install PyTorch CPU version (lighter than GPU version)
+RUN pip install --no-cache-dir \
+    torch==2.2.0 \
+    --index-url https://download.pytorch.org/whl/cpu
+
+# Stage 2: Install transformers and related packages
+RUN pip install --no-cache-dir \
+    transformers==4.38.0 \
+    accelerate==0.27.0 \
+    --extra-index-url https://download.pytorch.org/whl/cpu
+
+# Stage 3: Install sentence-transformers
+RUN pip install --no-cache-dir \
+    sentence-transformers==2.6.0 \
+    --extra-index-url https://download.pytorch.org/whl/cpu
+
+# Stage 4: Install ChromaDB
+RUN pip install --no-cache-dir chromadb==0.4.22
+
+# Stage 5: Install remaining dependencies
+RUN pip install --no-cache-dir -r requirements.txt \
+    --extra-index-url https://download.pytorch.org/whl/cpu
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p ./data/temp ./data/documents ./data/vector_store
+
+# Expose port
+EXPOSE 8000
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health/ || exit 1
+
+# Run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

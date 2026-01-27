@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
     
     # Security Configuration
-    secret_key: str = Field(..., env="SECRET_KEY")
+    secret_key: str = Field(default="dev_secret_key", env="SECRET_KEY")
     rate_limit: str = Field(default="60/minute", env="RATE_LIMIT")
     
     # Google Gemini Configuration
