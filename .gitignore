@@ -57,6 +57,7 @@ data/
 logs/
 
 # Testing
+.env
 .coverage
 .pytest_cache/
 htmlcov/
